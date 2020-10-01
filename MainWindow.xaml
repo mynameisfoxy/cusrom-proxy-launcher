@@ -10,7 +10,7 @@
         <Label
             x:Name="statusLabel"
             Margin="10,10,0,0"
-            Content="Status: "
+            Content="Proxy status: "
             VerticalAlignment="Top"
             HorizontalAlignment="Left"
             />

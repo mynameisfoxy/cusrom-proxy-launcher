@@ -1,9 +1,9 @@
 ﻿using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Management;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -11,6 +11,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -22,10 +23,13 @@ namespace launcherProxy
     /// </summary>
     public partial class MainWindow : Window
     {
+        //const
+        private static readonly string proxyResultPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\CustomProxyLauncher";
+        public const string STARTED = "Started";
+        public const string STOPPED = "Not started";
+
         //events
         private delegate void StatusDelegate(bool next = true);
-        private event StatusDelegate VaultStarted;
-        private event StatusDelegate VaultStopped;
         private event StatusDelegate SecretAdded;
         private event StatusDelegate ProxyBuilded;
         private event StatusDelegate ProxyMoved;
@@ -34,12 +38,10 @@ namespace launcherProxy
 
         //state
         private string proxyPath = "";
-        private static readonly string proxyResultPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\CustomProxyLauncher";
         private string proxyFileName = "";
         private string VaultRootToken = null;
         private string VaultApiAddress = null;
         private bool IsSecretStored = false;
-        private bool IsProxyStarted = false;
         private bool IsAllSettingsSet => !string.IsNullOrEmpty(VaultRootToken) && !string.IsNullOrEmpty(VaultApiAddress);
 
         private string VaultSecretKey
@@ -57,13 +59,6 @@ namespace launcherProxy
             KillVault();
             KillProxy();
             LoadSettings();
-
-            /*var timer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1),
-            };
-            timer.Tick += VaultCheckTick;
-            timer.Start();*/
         }
 
         private void InitializeEventHandlers()
@@ -75,27 +70,48 @@ namespace launcherProxy
             ProxyMoved += KeystoreGeneration;
             KeystoreReady += StartProxyServer;
 
-            ProxyServerStarted += (next) =>
-            {
-                //MessageBox.Show("keystore ready");
-                IsProxyStarted = true;
-            };
-
             Closing += (s, e) =>
             {
                 KillVault();
                 KillProxy();
             };
 
-            VaultStarted += (next) =>
+            ManagementEventWatcher startWatch = new ManagementEventWatcher(
+                new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace WHERE ProcessName='proxy.exe' OR ProcessName='vault.exe'"));
+            startWatch.EventArrived += new EventArrivedEventHandler((s, e) =>
             {
-                vaultStatusValue.Content = "Started";
-            };
+                Thread.Sleep(500); //for a clearer reaction when starting the process
+                Dispatcher.BeginInvoke(new ThreadStart(delegate
+                {
+                    if ((string)e.NewEvent.Properties["ProcessName"].Value == "proxy.exe")
+                    {
+                        statusValue.Content = STARTED;
+                    }
+                    else if ((string)e.NewEvent.Properties["ProcessName"].Value == "vault.exe")
+                    {
+                        vaultStatusValue.Content = STARTED;
+                    }
+                }));
+            });
+            startWatch.Start();
 
-            VaultStopped += (next) =>
+            ManagementEventWatcher stopWatch = new ManagementEventWatcher(
+                new WqlEventQuery("SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='proxy.exe' OR ProcessName='vault.exe'"));
+            stopWatch.EventArrived += new EventArrivedEventHandler((s, e) =>
             {
-                vaultStatusValue.Content = "Stopped";
-            };
+                Dispatcher.BeginInvoke(new ThreadStart(delegate
+                {
+                    if ((string)e.NewEvent.Properties["ProcessName"].Value == "proxy.exe")
+                    {
+                        statusValue.Content = STOPPED;
+                    }
+                    else if ((string)e.NewEvent.Properties["ProcessName"].Value == "vault.exe")
+                    {
+                        vaultStatusValue.Content = STOPPED;
+                    }
+                }));
+            });
+            stopWatch.Start();
         }
 
         private void ClearVaultCredentials()
@@ -117,7 +133,6 @@ namespace launcherProxy
 
         private void KillProxy()
         {
-            IsProxyStarted = false;
             var procIsRunning = Process.GetProcessesByName("proxy");
             foreach (var proce in procIsRunning)
             {
@@ -125,7 +140,7 @@ namespace launcherProxy
             }
         }
 
-        private void StartVault(bool next = true)
+        private void StartVault()
         {
             using (var process = new Process())
             {
@@ -152,13 +167,7 @@ namespace launcherProxy
                         }));
                     });
 
-                    process.Exited += new EventHandler((s, e) =>
-                    {
-                        VaultStopped?.Invoke();
-                    });
-
                     process.Start();
-                    if (next) VaultStarted?.Invoke();
                     process.BeginErrorReadLine();
                     process.BeginOutputReadLine();
                 }
@@ -173,12 +182,6 @@ namespace launcherProxy
                     }
                 }
             };
-        }
-
-        private void VaultCheckTick(object sender, EventArgs e)
-        {
-            var procIsRunning = Process.GetProcessesByName("vault");
-            vaultStatusValue.Content = procIsRunning.Length > 0 ? "Running" : "Stopped";
         }
 
         private async void ParseVaultRootToken(object sender, TextChangedEventArgs e)
