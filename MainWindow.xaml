@@ -143,7 +143,10 @@
                     <TextBox
                         x:Name="vaultOutput"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch" UndoLimit="5"
+                        VerticalAlignment="Stretch"
+                        UndoLimit="5"
+                        IsReadOnly="True"
+                        Cursor="Arrow"
                         />
                 </Grid>
             </TabItem>
@@ -152,7 +155,22 @@
                     <TextBox
                         x:Name="proxyOutput"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch" UndoLimit="5"
+                        VerticalAlignment="Stretch"
+                        UndoLimit="5"
+                        IsReadOnly="True"
+                        Cursor="Arrow"
+                        />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Log">
+                <Grid Background="#FFE5E5E5">
+                    <TextBox
+                        x:Name="LogOutput"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        UndoLimit="1"
+                        IsReadOnly="True"
+                        Cursor="Arrow"
                         />
                 </Grid>
             </TabItem>

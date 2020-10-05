@@ -37,6 +37,8 @@ namespace launcherProxy
         private event StatusDelegate ProxyServerStarted;
 
         //state
+        public bool ProxyIsRunning = false;
+        public bool VaultIsRunning = false;
         private string proxyPath = "";
         private string proxyFileName = "";
         private string VaultRootToken = null;
@@ -63,6 +65,7 @@ namespace launcherProxy
 
         private void InitializeEventHandlers()
         {
+            LogOutput.TextChanged += CleanupLoggingOutput;
             vaultOutput.TextChanged += ParseVaultRootToken;
             proxyOutput.TextChanged += CleanupProxyOutput;
             SecretAdded += ProxyBuild;
@@ -76,9 +79,9 @@ namespace launcherProxy
                 KillProxy();
             };
 
-            ManagementEventWatcher startWatch = new ManagementEventWatcher(
+            ManagementEventWatcher startWatcher = new ManagementEventWatcher(
                 new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace WHERE ProcessName='proxy.exe' OR ProcessName='vault.exe'"));
-            startWatch.EventArrived += new EventArrivedEventHandler((s, e) =>
+            startWatcher.EventArrived += new EventArrivedEventHandler((s, e) =>
             {
                 Thread.Sleep(500); //for a clearer reaction when starting the process
                 Dispatcher.BeginInvoke(new ThreadStart(delegate
@@ -86,24 +89,33 @@ namespace launcherProxy
                     if ((string)e.NewEvent.Properties["ProcessName"].Value == "proxy.exe")
                     {
                         statusValue.Content = STARTED;
+                        LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Proxy started.";
+                        ProxyIsRunning = true;
                     }
                     else if ((string)e.NewEvent.Properties["ProcessName"].Value == "vault.exe")
                     {
                         vaultStatusValue.Content = STARTED;
+                        VaultIsRunning = true;
                     }
                 }));
             });
-            startWatch.Start();
+            startWatcher.Start();
 
-            ManagementEventWatcher stopWatch = new ManagementEventWatcher(
+            ManagementEventWatcher stopWatcher = new ManagementEventWatcher(
                 new WqlEventQuery("SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='proxy.exe' OR ProcessName='vault.exe'"));
-            stopWatch.EventArrived += new EventArrivedEventHandler((s, e) =>
+            stopWatcher.EventArrived += new EventArrivedEventHandler((s, e) =>
             {
                 Dispatcher.BeginInvoke(new ThreadStart(delegate
                 {
                     if ((string)e.NewEvent.Properties["ProcessName"].Value == "proxy.exe")
                     {
                         statusValue.Content = STOPPED;
+                        if (ProxyIsRunning)
+                        {
+                            LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Proxy crashed. Restarting...";
+                            KillProxy();
+                            StartProxyServer();
+                        }
                     }
                     else if ((string)e.NewEvent.Properties["ProcessName"].Value == "vault.exe")
                     {
@@ -111,7 +123,7 @@ namespace launcherProxy
                     }
                 }));
             });
-            stopWatch.Start();
+            stopWatcher.Start();
         }
 
         private void ClearVaultCredentials()
@@ -124,19 +136,21 @@ namespace launcherProxy
         private void KillVault()
         {
             ClearVaultCredentials();
-            var procIsRunning = Process.GetProcessesByName("vault");
-            foreach (var proce in procIsRunning)
+            var processIsRunning = Process.GetProcessesByName("vault");
+            VaultIsRunning = false;
+            foreach (var process in processIsRunning)
             {
-                proce.Kill();
+                process.Kill();
             }
         }
 
         private void KillProxy()
         {
-            var procIsRunning = Process.GetProcessesByName("proxy");
-            foreach (var proce in procIsRunning)
+            var processIsRunning = Process.GetProcessesByName("proxy");
+            ProxyIsRunning = false;
+            foreach (var process in processIsRunning)
             {
-                proce.Kill();
+                process.Kill();
             }
         }
 
@@ -207,6 +221,14 @@ namespace launcherProxy
             if (proxyOutput.Text.Length > 500)
             {
                 proxyOutput.Text = proxyOutput.Text.Substring(25);
+            }
+        }
+
+        private void CleanupLoggingOutput(object sender, TextChangedEventArgs e)
+        {
+            if (LogOutput.Text.Length > 500)
+            {
+                LogOutput.Text = LogOutput.Text.Substring(25);
             }
         }
 
