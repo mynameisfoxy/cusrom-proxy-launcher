@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:launcherProxy"
         mc:Ignorable="d"
-        Title="Proxy Launcher" MinHeight="366" Height="435" MaxHeight="435" MinWidth="488" Width="488" MaxWidth="488" Background="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" ResizeMode="CanMinimize">
+        Title="Proxy Launcher" MinHeight="385" Height="385" MaxHeight="420" MinWidth="488" Width="488" MaxWidth="488" Background="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" ResizeMode="CanMinimize">
     <Grid>
         <Label
             x:Name="statusLabel"
@@ -26,11 +26,12 @@
             x:Name="startProxy"
             Height="34"
             VerticalAlignment="Bottom"
-            HorizontalAlignment="Stretch"
+            HorizontalAlignment="Left"
             Click="StartProxyButtonClick"
-            Margin="80,0,10,10"
-            Background="Red"
-            Content="Start proxy"
+            Margin="80,0,0,10"
+            MinWidth="200"
+            Background="Green"
+            Content="Start proxy" Width="130"
             />
 
 
@@ -66,21 +67,14 @@
         <Button
             x:Name="restartProxyButton"
             Content="Restart proxy"
-            Margin="170,156,170,0"
-            VerticalAlignment="Top"
-            HorizontalAlignment="Stretch"
-            Height="35"
-            Click="RestartProxy"
-            />
-        <Button
-            x:Name="rebuildRestartButton"
-            Content="Rebuild and restart"
-            Margin="0,156,10,0"
-            VerticalAlignment="Top"
+            Margin="0,0,10,10"
+            VerticalAlignment="Bottom"
+            IsEnabled="False"
             HorizontalAlignment="Right"
-            Height="35"
-            Width="150"
-            Click="RestartRebuildProxy"
+            HorizontalContentAlignment="Center"
+            Height="34"
+            MinWidth="180"
+            Click="RestartProxy" Width="172"
             />
         <Button
             Content="Save settings"
@@ -114,15 +108,6 @@
             Content="No path"
             VerticalAlignment="Top"
             />
-        <Button
-            x:Name="generateKeystoreButton"
-            Content="Generate keystore"
-            Margin="10,156,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Width="151"
-            Height="35" Click="GenerateKeystoreButtonCLick"
-            />
         <Label
             x:Name="vaultStatusLabel"
             Margin="10,30,0,0"
@@ -137,7 +122,7 @@
             VerticalAlignment="Top"
             HorizontalAlignment="Left"
             />
-        <TabControl HorizontalAlignment="Stretch" Height="150" Margin="10,201,10,0" VerticalAlignment="Top" >
+        <TabControl HorizontalAlignment="Stretch" Height="150" Margin="10,150,10,0" VerticalAlignment="Top" >
             <TabItem Header="Vault">
                 <Grid Background="#FFE5E5E5">
                     <TextBox

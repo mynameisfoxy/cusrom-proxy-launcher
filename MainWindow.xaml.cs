@@ -91,10 +91,12 @@ namespace launcherProxy
                         statusValue.Content = STARTED;
                         LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Proxy started.";
                         ProxyIsRunning = true;
+                        restartProxyButton.IsEnabled = true;
                     }
                     else if ((string)e.NewEvent.Properties["ProcessName"].Value == "vault.exe")
                     {
                         vaultStatusValue.Content = STARTED;
+                        LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Vault started.";
                         VaultIsRunning = true;
                     }
                 }));
@@ -110,16 +112,32 @@ namespace launcherProxy
                     if ((string)e.NewEvent.Properties["ProcessName"].Value == "proxy.exe")
                     {
                         statusValue.Content = STOPPED;
+                        restartProxyButton.IsEnabled = false;
                         if (ProxyIsRunning)
                         {
                             LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Proxy crashed. Restarting...";
                             KillProxy();
                             StartProxyServer();
                         }
+                        else
+                        {
+                            LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Proxy stoped.";
+                        }
                     }
                     else if ((string)e.NewEvent.Properties["ProcessName"].Value == "vault.exe")
                     {
                         vaultStatusValue.Content = STOPPED;
+                        if (VaultIsRunning)
+                        {
+                            KillVault();
+                            KillProxy();
+                            LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Vault crashed. Restarting...";
+                            StartVault();
+                        }
+                        else
+                        {
+                            LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Vault stoped.";
+                        }
                     }
                 }));
             });
@@ -133,9 +151,17 @@ namespace launcherProxy
             IsSecretStored = false;
         }
 
+        private void ClearAllLogs()
+        {
+            LogOutput.Text = "";
+            vaultOutput.Text = "";
+            proxyOutput.Text = "";
+        }
+
         private void KillVault()
         {
             ClearVaultCredentials();
+            ClearAllLogs();
             var processIsRunning = Process.GetProcessesByName("vault");
             VaultIsRunning = false;
             foreach (var process in processIsRunning)
@@ -152,6 +178,7 @@ namespace launcherProxy
             {
                 process.Kill();
             }
+            restartProxyButton.IsEnabled = false;
         }
 
         private void StartVault()
@@ -232,26 +259,6 @@ namespace launcherProxy
             }
         }
 
-        /* need to fix bug with 6 requests in a row */
-        private async Task<bool> CheckSecretExists()
-        {
-            var result = false;
-
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.BaseAddress = new Uri(VaultApiAddress);
-                httpClient.DefaultRequestHeaders.Add("X-Vault-Token", VaultRootToken);
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                var request = new HttpRequestMessage(HttpMethod.Get, "/v1/secret/data/secret_key");
-                var response = await httpClient.SendAsync(request);
-
-                result = response.StatusCode == HttpStatusCode.OK;
-            }
-
-            return result;
-        }
-
         private async Task PutSecretToVault(bool next = true)
         {
             var payload = JsonConvert.SerializeObject(new
@@ -285,12 +292,7 @@ namespace launcherProxy
                     {
                         if (next) ProxyMoved?.Invoke();
                     }
-                    
                 }
-                /*else
-                {
-                    MessageBox.Show($"Secret wasn't added by some reasons. Status {response.StatusCode}");
-                }*/
             }
         }
 
@@ -471,24 +473,33 @@ namespace launcherProxy
         private void StartProxyButtonClick(object sender, RoutedEventArgs e)
         {
             // starts event chain from vault starting process
-            StartVault();
-        }
-
-        private void GenerateKeystoreButtonCLick(object sender, RoutedEventArgs e)
-        {
-            KeystoreGeneration(false);
-        }
-
-        private void RestartRebuildProxy(object sender, RoutedEventArgs e)
-        {
-            KillProxy();
-            ProxyBuild();
+            if (!VaultIsRunning)
+            {
+                StartVault();
+                startProxy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red);
+                startProxy.Content = "Stop proxy";
+            }
+            else
+            {
+                KillVault();
+                KillProxy();
+                LogOutput.Text += $"\n{DateTime.Now.ToLongTimeString()}: Vault and proxy stoped by user.";
+                startProxy.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Green);
+                startProxy.Content = "Start proxy";
+            }
         }
 
         private void RestartProxy(object sender, RoutedEventArgs e)
         {
             KillProxy();
-            StartProxyServer();
+            if (rebuildNeeded.IsChecked == true)
+            {
+                ProxyBuild();
+            }
+            else
+            {
+                StartProxyServer();
+            }
         }
     }
 }
