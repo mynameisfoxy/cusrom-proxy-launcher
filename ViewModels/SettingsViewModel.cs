@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Microsoft.Win32;
 using launcherProxy.Commands;
 using launcherProxy.Models;
-using Microsoft.Win32;
 
 namespace launcherProxy.ViewModels
 {
     internal class SettingsViewModel : BaseInpc
     {
-        private static readonly string ProxyResultPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\CustomProxyLauncher";
+        public readonly string ProxyResultPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\CustomProxyLauncher";
         private readonly Settings _settings;
 
         private RelayCommand _saveSettingsCommand;
@@ -27,27 +27,27 @@ namespace launcherProxy.ViewModels
             set
             {
                 _settings.Password = value;
-                OnPropertyChanged("Password");
+                OnPropertyChanged();
             }
         }
 
-        public string ProxySourcesPath
+        private string ProxySourcesPath
         {
             get => _settings.ProxySourcesPath;
             set
             {
                 _settings.ProxySourcesPath = value;
-                OnPropertyChanged("ProxySourcesPath");
+                OnPropertyChanged();
             }
         }
 
         public string ProxySourcesFileName
         {
             get => _settings.ProxySourcesFileName;
-            set
+            private set
             {
                 _settings.ProxySourcesFileName = value;
-                OnPropertyChanged("ProxySourcesFileName");
+                OnPropertyChanged();
             }
         }
 
@@ -57,14 +57,9 @@ namespace launcherProxy.ViewModels
             set
             {
                 _settings.VaultSecretKey = value;
-                OnPropertyChanged("VaultSecretKey");
+                OnPropertyChanged();
             }
         }
-
-        /*public string ProxyAppPath => string.IsNullOrWhiteSpace(ProxySourcesPath)
-                                      && string.IsNullOrWhiteSpace(ProxySourcesFileName)
-                ? $"{ProxySourcesPath}/{ProxySourcesFileName}"
-                : string.Empty;*/
 
         public string ProxyAppPath
         {

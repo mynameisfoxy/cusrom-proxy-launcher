@@ -1,10 +1,9 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace launcherProxy.Components
 {
-    public partial class BindablePasswordBox : UserControl
+    public partial class BindablePasswordBox
     {
         private bool _isPasswordChanging;
         public static readonly DependencyProperty PasswordProperty =
