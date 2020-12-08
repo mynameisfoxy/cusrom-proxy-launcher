@@ -1,0 +1,164 @@
+﻿<Window x:Class="launcherProxy.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:launcherProxy.Views"
+        mc:Ignorable="d"
+        Title="Proxy Launcher" MinHeight="385" Height="385" MaxHeight="420" MinWidth="488" Width="488" MaxWidth="488" Background="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" ResizeMode="CanMinimize">
+    <Grid>
+        <Label
+            x:Name="statusLabel"
+            Margin="10,10,0,0"
+            Content="Proxy status: "
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            />
+        <Label
+            x:Name="statusValue"
+            Margin="91,10,0,0"
+            Content="Not started"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            />
+        <CheckBox x:Name="rebuildNeeded" Content="Rebuild" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,10,17" />
+        <Button
+            x:Name="startProxy"
+            Height="34"
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Left"
+            Click="StartProxyButtonClick"
+            Margin="80,0,0,10"
+            MinWidth="200"
+            Background="Green"
+            Content="Start proxy" Width="130"
+            />
+
+
+        <Label
+            x:Name="keyLabel"
+            HorizontalAlignment="Left"
+            Margin="10,89,0,0"
+            Content="Encode key"
+            VerticalAlignment="Top"
+            />
+        <PasswordBox
+            x:Name="keyValue"
+            Margin="99,89,10.6,0"
+            VerticalAlignment="Top"
+            Height="25"
+            VerticalContentAlignment="Center"
+            />
+
+        <Label
+            x:Name="userPasswordLabel"
+            HorizontalAlignment="Left"
+            Margin="10,119,0,0"
+            Content="Password"
+            VerticalAlignment="Top"
+            />
+        <PasswordBox
+            x:Name="userPasswordValue"
+            Margin="99,119,10.6,0"
+            VerticalAlignment="Top"
+            Height="25"
+            VerticalContentAlignment="Center"
+            />
+        <Button
+            x:Name="restartProxyButton"
+            Content="Restart proxy"
+            Margin="0,0,10,10"
+            VerticalAlignment="Bottom"
+            IsEnabled="False"
+            HorizontalAlignment="Right"
+            HorizontalContentAlignment="Center"
+            Height="34"
+            MinWidth="180"
+            Click="RestartProxy" Width="172"
+            />
+        <Button
+            Content="Save settings"
+            Margin="0,10,9.6,0"
+            Height="35"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Right"
+            Click="SaveSettings"
+            Width="85"
+            />
+        <Button
+            Content="Choose path"
+            Margin="0,46,9.6,0"
+            Height="35"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Right"
+            Click="OpenProxyMain"
+            Width="85"
+            />
+
+        <Label
+            HorizontalAlignment="Left"
+            Margin="10,51,0,0"
+            Content="Proxy path: "
+            VerticalAlignment="Top"
+            />
+        <Label
+            x:Name="proxyPathLabel"
+            HorizontalAlignment="Stretch"
+            Margin="91,51,99.6,0"
+            Content="No path"
+            VerticalAlignment="Top"
+            />
+        <Label
+            x:Name="vaultStatusLabel"
+            Margin="10,30,0,0"
+            Content="Vault status: "
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            />
+        <Label
+            x:Name="vaultStatusValue"
+            Margin="91,30,0,0"
+            Content="Not started"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            />
+        <TabControl HorizontalAlignment="Stretch" Height="150" Margin="10,150,10,0" VerticalAlignment="Top" >
+            <TabItem Header="Vault">
+                <Grid Background="#FFE5E5E5">
+                    <TextBox
+                        x:Name="vaultOutput"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        UndoLimit="5"
+                        IsReadOnly="True"
+                        Cursor="Arrow"
+                        />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Proxy">
+                <Grid Background="#FFE5E5E5">
+                    <TextBox
+                        x:Name="proxyOutput"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        UndoLimit="5"
+                        IsReadOnly="True"
+                        Cursor="Arrow"
+                        />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Log">
+                <Grid Background="#FFE5E5E5">
+                    <TextBox
+                        x:Name="LogOutput"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        UndoLimit="1"
+                        IsReadOnly="True"
+                        Cursor="Arrow"
+                        />
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
